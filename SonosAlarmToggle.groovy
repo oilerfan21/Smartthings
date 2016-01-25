@@ -54,12 +54,12 @@ def initialize()
 
 def switchHandler(evt){
 	log.debug "got a switch event"
-    state.firstpass = "1"
+    	state.firstpass = "1"
 	BuildgetAction()
 }
 def sendAction(result){
 	log.trace "what exactly am I sending? - ${result}"
-    def end = sendHubCommand(result)
+    	def end = sendHubCommand(result)
 	log.trace "command sent ${result}"
 
 }
@@ -69,7 +69,7 @@ private BuildgetAction() {
 	log.trace "building SOAP get request"
 	def result = new physicalgraph.device.HubSoapAction(
 		path:	 "/AlarmClock/Control",
-        urn:     'urn:schemas-upnp-org:service:AlarmClock:1',
+        	urn:     'urn:schemas-upnp-org:service:AlarmClock:1',
 		action:  "ListAlarms",
 		body:    body,
 		headers: [Host:"192.168.8.4:1400", CONNECTION: "close"]
@@ -84,8 +84,8 @@ private BuildgetAction() {
 
 def lanResponseHandler(evt) {
     def hdr = parseLanMessage(evt.description)
-    	log.trace "lan Response entry first pass status? - ${state.firstpass}"
-        log.trace "header - ${hdr.header}"
+    log.trace "lan Response entry first pass status? - ${state.firstpass}"
+    log.trace "header - ${hdr.header}"
     
     if (hdr.header){
     
@@ -95,21 +95,19 @@ def lanResponseHandler(evt) {
      
         if (env.Body.ListAlarmsResponse.size()>0){
         	log.trace "looks like a valid Alarms list response - First time through? - ${state.firstpass}"
-			if (state.firstpass == "1"){
-                    
-				log.trace "changing state of firstpass"
-                state.firstpass = "0"
+		if (state.firstpass == "1"){
+			log.trace "changing state of firstpass"
+                	state.firstpass = "0"
         		log.trace "getting the alarms and first pass is now ${state.firstpass}"
     			def alarms = new XmlSlurper().parseText(env.Body.ListAlarmsResponse.CurrentAlarmList.text())
-                alarms.children().each{ processAlarm(it) }
-                log.trace "finished running through each alarm"
-
+                	alarms.children().each{ processAlarm(it) }
+                	log.trace "finished running through each alarm"
     		}
-            else{
-            	log.trace "stepping through"
-            }
-		}
-	}	
+            	else{
+            		log.trace "stepping through"
+            	}
+	}
+    }	
 }
 
 def processAlarm(alarm) {
@@ -119,7 +117,7 @@ def processAlarm(alarm) {
 		if (alarm.@Enabled == 1){
 			alarm.@Enabled = '0'
 		}
-        else{
+        	else{
 			alarm.@Enabled = '1'
 		}
         
@@ -132,26 +130,26 @@ private BuildsetAction(alarm) {
 	log.trace "building SOAP Set request for Alarm - ${alarm.@ID}"
 	def setresult = new physicalgraph.device.HubSoapAction(
 		path:	 "/AlarmClock/Control",
-        urn:     'urn:schemas-upnp-org:service:AlarmClock:1',
+        	urn:     'urn:schemas-upnp-org:service:AlarmClock:1',
 		action:  "UpdateAlarm",
 		body:   [ID: alarm.@ID, 
-				StartLocalTime: alarm.@StartTime, 
-				Duration: alarm.@Duration,
-				Recurrence: alarm.@Recurrence,
-				Enabled: alarm.@Enabled,
-				RoomUUID: alarm.@RoomUUID,
-                ProgramURI: alarm.@ProgramURI,
-				ProgramMetaData: alarm.@ProgramMetaData,
-				PlayMode: alarm.@PlayMode,
-				Volume: alarm.@Volume,
-				IncludeLinkedZones: alarm.@IncludeLinkedZones
-				],
+			StartLocalTime: alarm.@StartTime, 
+			Duration: alarm.@Duration,
+			Recurrence: alarm.@Recurrence,
+			Enabled: alarm.@Enabled,
+			RoomUUID: alarm.@RoomUUID,
+              		ProgramURI: alarm.@ProgramURI,
+			ProgramMetaData: alarm.@ProgramMetaData,
+			PlayMode: alarm.@PlayMode,
+			Volume: alarm.@Volume,
+			IncludeLinkedZones: alarm.@IncludeLinkedZones
+			],
 		headers: [Host:"192.168.8.4:1400", CONNECTION: "close"]
 	)
     
     //    log.trace "result - ${result}"
 
-	sendAction(setresult)
+    sendAction(setresult)
     log.trace "sent follow-up get request"
     BuildgetAction()
     log.trace "sent set request"
